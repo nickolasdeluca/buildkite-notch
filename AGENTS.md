@@ -55,7 +55,7 @@ The sandbox usually lacks Screen Recording permission, so `screencapture` fails.
 - Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `build:`), imperative, English.
 - **No `Co-Authored-By` trailers or "generated with" footers.** Authorship belongs to the human.
 - Commit only when asked. Don't push to `main` or publish releases without explicit approval.
-- User-visible changes get a line under `## [Unreleased]` in `CHANGELOG.md` (in Portuguese) in the
+- User-visible changes get a line under `## [Unreleased]` in `CHANGELOG.md` (in English) in the
   same commit.
 
 ## Versioning and releases

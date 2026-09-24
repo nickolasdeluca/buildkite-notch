@@ -1,29 +1,29 @@
 # Changelog
 
-Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem
-[SemVer](https://semver.org/lang/pt-BR/).
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
+[SemVer](https://semver.org/).
 
 ## [Unreleased]
 
 ## [0.2.0] - 2026-09-24
 
-### Adicionado
+### Added
 
-- Interface em inglês (en-US), além de português (pt-BR). O app segue o idioma do macOS e pode ser
-  trocado em Preferências → Geral → Idioma.
+- English (en-US) interface alongside Portuguese (pt-BR). The app follows the macOS language and
+  can be switched in Settings → General → Language.
 
-### Corrigido
+### Fixed
 
-- Cask do Homebrew usa a sintaxe atual de `depends_on macos`, sem aviso de descontinuação.
+- The Homebrew cask uses the current `depends_on macos` syntax, with no deprecation warning.
 
 ## [0.1.0] - 2026-09-24
 
-### Adicionado
+### Added
 
-- Notch com um anel de progresso por pipeline e card expandido ao passar o mouse.
-- Posicionamento em qualquer borda de qualquer tela, com arraste via ⌥ Option.
-- Notificações de build que passou, falhou, foi cancelado ou aguarda aprovação.
-- Preferências: token no Keychain, organização, pipelines, filtro de branches, posição, aparência
-  (Liquid Glass, Dark Glass, Preto sólido), notificações e abrir ao iniciar sessão.
-- Ícone no Dock enquanto as Preferências estão abertas.
-- Distribuição assinada com Developer ID, notarizada e instalável via Homebrew.
+- Notch with one progress ring per pipeline and a card that expands on hover.
+- Placement on any edge of any display, with ⌥ Option drag.
+- Notifications for builds that passed, failed, were canceled or are waiting for approval.
+- Settings: token in the Keychain, organization, pipelines, branch filter, placement, appearance
+  (Liquid Glass, Dark Glass, Solid Black), notifications and open at login.
+- Dock icon while Settings is open.
+- Distribution signed with Developer ID, notarized and installable via Homebrew.
