@@ -5,6 +5,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-24
+
 ### Adicionado
 
 - Interface em inglês (en-US), além de português (pt-BR). O app segue o idioma do macOS e pode ser
