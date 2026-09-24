@@ -5,6 +5,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ## [Unreleased]
 
+### Corrigido
+
+- Cask do Homebrew usa a sintaxe atual de `depends_on macos`, sem aviso de descontinuação.
+
 ## [0.1.0] - 2026-09-24
 
 ### Adicionado

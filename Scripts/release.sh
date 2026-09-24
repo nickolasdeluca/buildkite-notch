@@ -110,7 +110,7 @@ cask "buildkite-notch" do
   desc "Notch that tracks Buildkite builds and deploys"
   homepage "https://github.com/${REPO}"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "${APP_NAME}.app"
 
