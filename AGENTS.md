@@ -11,7 +11,7 @@ macOS 14+. The `Makefile` assembles the `.app` bundle from the SwiftPM executabl
   (what triggers a notification), notch geometry. No AppKit/SwiftUI. Everything here must be unit-tested.
 - `Sources/BuildkiteNotch` — the app: `NotchController` (AppKit panel, mouse monitors, layout),
   `NotchViews`/`NotchSurface` (SwiftUI), `BuildStore` (polling), `AppSettings` (UserDefaults + Keychain),
-  `Notifier`, `SettingsView`.
+  `Notifier`, `SettingsView`, and `Localization/` (`Strings` plus one conforming type per language).
 - `Scripts/make-icon.swift` draws the icon; `Scripts/release.sh` signs, notarizes and publishes.
 
 ## Commands
@@ -27,8 +27,13 @@ types are `@MainActor`.
 
 ## Conventions
 
-- Code, identifiers and code comments in **English**. User-facing strings (UI, notifications,
-  errors) in **Brazilian Portuguese**.
+- Code, identifiers and code comments in **English**.
+- User-facing strings (UI, menus, notifications, errors) are translated to **en-US and pt-BR**. Add
+  them as a `Strings` requirement and implement it in `EnglishStrings` and `PortugueseStrings`; never
+  hard-code them in views or in `BuildkiteNotchCore`. Views read `@Environment(\.strings)`; AppKit
+  code uses `settings.strings`. Brand and product names (Buildkite, Liquid Glass, API Access Token)
+  stay literal. Store errors and statuses raw and format them at display time, so a language change
+  applies without waiting for the next poll.
 - Put decision logic in `BuildkiteNotchCore` with tests; keep the app target thin.
 - Geometry works in edge-relative terms (`ScreenEdge` + 0…1 position). Never assume the notch is on
   the top edge or that the screen has a hardware notch.

@@ -13,6 +13,8 @@ Um notch para macOS que acompanha os builds e deploys dos seus pipelines do
   vertical. Segure **⌥ Option** sobre o notch e arraste, ou ajuste em Preferências → Posição do notch.
   Em Macs com notch físico, no topo e centralizado, ele se funde ao notch da câmera.
 - **Aparência:** Liquid Glass, Dark Glass ou Preto sólido.
+- **Idioma:** português (Brasil) ou inglês (EUA). Segue o idioma do macOS e pode ser trocado em
+  Preferências → Geral → Idioma.
 
 ## Instalação
 
@@ -62,6 +64,7 @@ Builds locais usam assinatura ad-hoc, então o macOS pode pedir acesso ao Keycha
 ```
 Sources/BuildkiteNotchCore/   API REST v2, modelos, regras de notificação e geometria do notch (sem UI, testável)
 Sources/BuildkiteNotch/       App AppKit + SwiftUI
+  Localization/               Textos da interface, um arquivo por idioma
   Notch/                      Janela do notch, notch recolhido, card, estilos
   Services/                   Preferências, Keychain, polling (BuildStore), notificações
   Settings/                   Janela de Preferências

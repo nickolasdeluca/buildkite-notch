@@ -5,6 +5,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Interface em inglês (en-US), além de português (pt-BR). O app segue o idioma do macOS e pode ser
+  trocado em Preferências → Geral → Idioma.
+
 ### Corrigido
 
 - Cask do Homebrew usa a sintaxe atual de `depends_on macos`, sem aviso de descontinuação.

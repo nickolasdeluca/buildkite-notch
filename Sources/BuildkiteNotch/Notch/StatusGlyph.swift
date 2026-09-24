@@ -84,18 +84,5 @@ struct Spinner: View {
 }
 
 extension Glyph {
-    var label: String {
-        switch self {
-        case .idle: "ocioso"
-        case .scheduled: "na fila"
-        case .running: "rodando"
-        case .failing: "falhando"
-        case .passed: "passou"
-        case .failed: "falhou"
-        case .blocked: "aguardando"
-        case .canceled: "cancelado"
-        }
-    }
-
     var isActive: Bool { self == .running || self == .failing || self == .scheduled }
 }

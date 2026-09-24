@@ -1,23 +1,13 @@
 import Foundation
 
-public enum BuildkiteError: Error, LocalizedError, Equatable {
+/// Messages are in the app's `Strings`, so they follow the chosen language.
+public enum BuildkiteError: Error, Equatable {
     case unauthorized
     case forbidden(String?)
     case notFound
     case rateLimited
     case http(Int, String?)
     case invalidResponse
-
-    public var errorDescription: String? {
-        switch self {
-        case .unauthorized: "Token inválido ou revogado."
-        case .forbidden(let message): message ?? "Token sem permissão (verifique os escopos)."
-        case .notFound: "Recurso não encontrado."
-        case .rateLimited: "Limite de requisições da API atingido."
-        case .http(let status, let message): message ?? "Erro HTTP \(status)."
-        case .invalidResponse: "Resposta inválida da API."
-        }
-    }
 }
 
 /// Minimal client for the Buildkite REST API v2.

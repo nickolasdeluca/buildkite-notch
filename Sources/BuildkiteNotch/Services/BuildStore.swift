@@ -10,11 +10,17 @@ struct PipelineItem: Identifiable {
     var id: String { slug }
 }
 
+/// A pipeline whose last poll failed. Kept raw so the message follows the current language.
+struct PollFailure {
+    let pipelineName: String
+    let error: any Error
+}
+
 @MainActor
 @Observable
 final class BuildStore {
     private(set) var buildsByPipeline: [String: [Build]] = [:]
-    private(set) var lastError: String?
+    private(set) var failures: [PollFailure] = []
     private(set) var lastUpdated: Date?
     private(set) var isRefreshing = false
 
@@ -50,6 +56,16 @@ final class BuildStore {
             .filter { !headlines.contains($0.id) }
     }
 
+    /// One line per failed pipeline.
+    var lastError: String? {
+        guard !failures.isEmpty else { return nil }
+        let strings = settings.strings
+        return failures
+            .map { "\($0.pipelineName): \(strings.message(for: $0.error))" }
+            .sorted()
+            .joined(separator: "\n")
+    }
+
     func status(at now: Date) -> NotchStatus {
         BuildSelection.status(of: buildsByPipeline.values.flatMap { $0 }, now: now)
     }
@@ -69,7 +85,7 @@ final class BuildStore {
     /// Settings changed: forget old builds so we don't fire stale notifications.
     func restart() {
         buildsByPipeline = [:]
-        lastError = nil
+        failures = []
         start(debounce: .milliseconds(600))
     }
 
@@ -79,7 +95,7 @@ final class BuildStore {
     private func refresh() async -> Duration {
         guard settings.isConfigured else {
             buildsByPipeline = [:]
-            lastError = nil
+            failures = []
             return Self.idleInterval
         }
 
@@ -110,26 +126,26 @@ final class BuildStore {
         // Settings changed while we were waiting; drop this round.
         guard !Task.isCancelled, settings.pollConfiguration == config else { return Self.activeInterval }
 
-        var errors: [String] = []
+        var failed: [PollFailure] = []
         var rateLimited = false
         for (slug, result) in results {
             switch result {
             case .success(let builds):
                 if settings.notificationsEnabled {
                     for event in BuildTransitions.events(previous: buildsByPipeline[slug], current: builds) {
-                        notifier.post(event, pipelineName: settings.pipelineName(for: slug))
+                        notifier.post(event, pipelineName: settings.pipelineName(for: slug), strings: settings.strings)
                     }
                 }
                 buildsByPipeline[slug] = builds
             case .failure(let error):
                 if (error as? BuildkiteError) == .rateLimited { rateLimited = true }
-                errors.append("\(settings.pipelineName(for: slug)): \(error.localizedDescription)")
+                failed.append(PollFailure(pipelineName: settings.pipelineName(for: slug), error: error))
             }
         }
 
         let selected = Set(config.pipelines.map(\.slug))
         buildsByPipeline = buildsByPipeline.filter { selected.contains($0.key) }
-        lastError = errors.isEmpty ? nil : errors.sorted().joined(separator: "\n")
+        failures = failed
         lastUpdated = .now
 
         if rateLimited { return Self.backoffInterval }

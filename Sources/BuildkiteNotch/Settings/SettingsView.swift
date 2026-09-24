@@ -7,8 +7,8 @@ struct SettingsView: View {
     @Bindable var settings: AppSettings
 
     @State private var draftToken = ""
-    @State private var tokenStatus: String?
-    @State private var errorMessage: String?
+    @State private var accessToken: AccessToken?
+    @State private var failure: Failure?
     @State private var isLoading = false
     @State private var organizations: [Organization] = []
     @State private var pipelines: [Pipeline] = []
@@ -16,6 +16,14 @@ struct SettingsView: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     private static let requiredScopes = ["read_builds", "read_pipelines", "read_organizations"]
+
+    /// Kept raw so the message follows a language change.
+    private enum Failure {
+        case api(any Error)
+        case loginItem(any Error)
+    }
+
+    private var strings: any Strings { settings.strings }
 
     var body: some View {
         Form {
@@ -40,29 +48,34 @@ struct SettingsView: View {
             SecureField("API Access Token", text: $draftToken)
                 .onSubmit { Task { await connect() } }
             HStack {
-                Button("Conectar") { Task { await connect() } }
+                Button(strings.connect) { Task { await connect() } }
                     .disabled(draftToken.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
                 if isLoading { ProgressView().controlSize(.small) }
                 Spacer()
                 if !settings.token.isEmpty {
-                    Button("Desconectar", role: .destructive, action: disconnect)
+                    Button(strings.disconnect, role: .destructive, action: disconnect)
                 }
             }
-            if let tokenStatus {
-                Text(tokenStatus).font(.caption).foregroundStyle(.secondary)
+            if let accessToken {
+                Text(strings.connected(
+                    as: accessToken.user?.name ?? accessToken.user?.email,
+                    missingScopes: Self.requiredScopes.filter { !accessToken.scopes.contains($0) }
+                ))
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
-            if let errorMessage {
-                Text(errorMessage).font(.caption).foregroundStyle(.red)
+            if let failure {
+                Text(message(for: failure)).font(.caption).foregroundStyle(.red)
             }
             if !organizations.isEmpty {
-                Picker("Organização", selection: organizationBinding) {
+                Picker(strings.organization, selection: organizationBinding) {
                     ForEach(organizations) { Text($0.name).tag($0.slug) }
                 }
             }
         } header: {
-            Text("Conta")
+            Text(strings.account)
         } footer: {
-            Text("Crie um token em buildkite.com/user/api-access-tokens com os escopos \(Self.requiredScopes.joined(separator: ", ")).")
+            Text(strings.tokenHelp(scopes: Self.requiredScopes.joined(separator: ", ")))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -93,11 +106,11 @@ struct SettingsView: View {
     private var pipelinesSection: some View {
         Section {
             if pipelines.isEmpty {
-                Text(settings.organization.isEmpty ? "Conecte uma conta para listar os pipelines." : "Nenhum pipeline carregado.")
+                Text(settings.organization.isEmpty ? strings.connectToListPipelines : strings.noPipelinesLoaded)
                     .foregroundStyle(.secondary)
             } else {
                 if pipelines.count > Self.searchThreshold {
-                    TextField("Buscar", text: $search)
+                    TextField(strings.search, text: $search)
                 }
                 if filteredPipelines.count > Self.maxInlineRows {
                     ScrollView {
@@ -108,11 +121,11 @@ struct SettingsView: View {
                     pipelineRows
                 }
             }
-            TextField("Branches", text: $settings.branchFilter, prompt: Text("main, production"))
+            TextField(strings.branches, text: $settings.branchFilter, prompt: Text(verbatim: "main, production"))
         } header: {
-            Text("Pipelines (\(settings.pipelines.count) selecionados)")
+            Text(strings.pipelinesHeader(selected: settings.pipelines.count))
         } footer: {
-            Text("Branches separadas por vírgula. Vazio acompanha todas as branches.")
+            Text(strings.branchesHelp)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -156,29 +169,26 @@ struct SettingsView: View {
 
     private var placementSection: some View {
         Section {
-            Picker("Borda", selection: $settings.placement.edge) {
-                Text("Topo").tag(ScreenEdge.top)
-                Text("Base").tag(ScreenEdge.bottom)
-                Text("Esquerda").tag(ScreenEdge.left)
-                Text("Direita").tag(ScreenEdge.right)
+            Picker(strings.edge, selection: $settings.placement.edge) {
+                ForEach(ScreenEdge.allCases, id: \.self) { Text(strings.name(for: $0)).tag($0) }
             }
             .pickerStyle(.segmented)
             HStack {
-                Slider(value: $settings.placement.position, in: 0...1) { Text("Posição") }
-                Button("Centralizar") { settings.placement.position = 0.5 }
+                Slider(value: $settings.placement.position, in: 0...1) { Text(strings.position) }
+                Button(strings.center) { settings.placement.position = 0.5 }
             }
             if NSScreen.screens.count > 1 {
-                Picker("Tela", selection: $settings.placement.displayID) {
-                    Text("Principal").tag(UInt32?.none)
+                Picker(strings.display, selection: $settings.placement.displayID) {
+                    Text(strings.mainDisplay).tag(UInt32?.none)
                     ForEach(NSScreen.screens, id: \.displayID) { screen in
                         Text(screen.localizedName).tag(screen.displayID)
                     }
                 }
             }
         } header: {
-            Text("Posição do notch")
+            Text(strings.notchPosition)
         } footer: {
-            Text("Dica: segure ⌥ Option sobre o notch e arraste para movê-lo para qualquer borda.")
+            Text(strings.dragHint)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -187,9 +197,9 @@ struct SettingsView: View {
     // MARK: - Appearance
 
     private var appearanceSection: some View {
-        Section("Aparência") {
-            Picker("Estilo do notch", selection: $settings.notchStyle) {
-                ForEach(NotchStyle.allCases) { Text($0.title).tag($0) }
+        Section(strings.appearance) {
+            Picker(strings.notchStyle, selection: $settings.notchStyle) {
+                ForEach(NotchStyle.allCases) { Text(strings.name(for: $0)).tag($0) }
             }
             .pickerStyle(.segmented)
         }
@@ -198,17 +208,34 @@ struct SettingsView: View {
     // MARK: - General
 
     private var generalSection: some View {
-        Section("Geral") {
-            Toggle("Notificar quando builds terminarem", isOn: $settings.notificationsEnabled)
-            Toggle("Abrir ao iniciar sessão", isOn: $launchAtLogin)
+        Section {
+            Picker(strings.language, selection: $settings.language) {
+                Text(strings.systemLanguage).tag(Language?.none)
+                ForEach(Language.allCases) { Text(verbatim: $0.nativeName).tag(Language?.some($0)) }
+            }
+            Toggle(strings.notifyWhenFinished, isOn: $settings.notificationsEnabled)
+            Toggle(strings.launchAtLogin, isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, enabled in
                     do {
                         if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
                     } catch {
-                        errorMessage = "Não foi possível alterar o login: \(error.localizedDescription)"
+                        failure = .loginItem(error)
                         launchAtLogin = SMAppService.mainApp.status == .enabled
                     }
                 }
+        } header: {
+            Text(strings.general)
+        } footer: {
+            Text(strings.languageHelp)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func message(for failure: Failure) -> String {
+        switch failure {
+        case .api(let error): strings.message(for: error)
+        case .loginItem(let error): strings.loginItemFailed(error.localizedDescription)
         }
     }
 
@@ -232,22 +259,17 @@ struct SettingsView: View {
         draftToken = ""
         organizations = []
         pipelines = []
-        tokenStatus = nil
-        errorMessage = nil
+        accessToken = nil
+        failure = nil
     }
 
     private func loadAccount() async {
         isLoading = true
-        errorMessage = nil
+        failure = nil
         defer { isLoading = false }
         let client = BuildkiteClient(token: settings.token)
         do {
-            let info = try await client.accessToken()
-            let missing = Self.requiredScopes.filter { !info.scopes.contains($0) }
-            let who = info.user?.name ?? info.user?.email ?? "token válido"
-            tokenStatus = missing.isEmpty
-                ? "Conectado: \(who)"
-                : "Conectado: \(who). Faltam escopos: \(missing.joined(separator: ", "))"
+            accessToken = try await client.accessToken()
 
             organizations = try await client.organizations().sorted { $0.name < $1.name }
             if !organizations.contains(where: { $0.slug == settings.organization }), let first = organizations.first {
@@ -256,7 +278,7 @@ struct SettingsView: View {
             }
             await loadPipelines()
         } catch {
-            errorMessage = error.localizedDescription
+            failure = .api(error)
         }
     }
 
@@ -267,7 +289,7 @@ struct SettingsView: View {
                 .pipelines(organization: settings.organization)
                 .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         } catch {
-            errorMessage = error.localizedDescription
+            failure = .api(error)
         }
     }
 }

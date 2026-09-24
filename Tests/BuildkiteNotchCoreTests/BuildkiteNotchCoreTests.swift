@@ -54,6 +54,10 @@ private func build(
     #expect(b.jobProgress.total == 2)
 }
 
+@Test func titleIsFirstLineOrNil() {
+    #expect(build("a", .passed).title == nil)
+}
+
 @Test func unknownStateDecodesAsUnknown() throws {
     let json = #"["brand_new_state"]"#
     let states = try JSONDecoder().decode([BuildState].self, from: Data(json.utf8))
@@ -129,4 +133,14 @@ private let screen = CGRect(x: 0, y: 0, width: 1000, height: 600)
     let top = NotchLayout.placement(nearest: CGPoint(x: 510, y: 595), in: screen, displayID: nil)
     #expect(top.edge == .top)
     #expect(top.isCentered)
+}
+
+@Test func languageFollowsFirstSupportedPreference() {
+    #expect(Language.preferred(in: ["pt-BR", "en-US"]) == .portuguese)
+    #expect(Language.preferred(in: ["pt-PT"]) == .portuguese)
+    #expect(Language.preferred(in: ["pt_BR"]) == .portuguese)
+    #expect(Language.preferred(in: ["en-GB", "pt-BR"]) == .english)
+    #expect(Language.preferred(in: ["de-DE", "pt-BR"]) == .portuguese)
+    #expect(Language.preferred(in: ["fr-FR", "de"]) == .english)
+    #expect(Language.preferred(in: []) == .english)
 }

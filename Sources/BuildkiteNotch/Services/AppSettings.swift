@@ -6,14 +6,6 @@ enum NotchStyle: String, CaseIterable, Identifiable {
     case liquidGlass, darkGlass, solidBlack
 
     var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .liquidGlass: "Liquid Glass"
-        case .darkGlass: "Dark Glass"
-        case .solidBlack: "Preto sólido"
-        }
-    }
 }
 
 struct PipelineSelection: Codable, Hashable, Identifiable {
@@ -41,6 +33,8 @@ final class AppSettings {
         static let notificationsEnabled = "notificationsEnabled"
         static let placement = "placement"
         static let notchStyle = "notchStyle"
+        static let language = "language"
+        static let appleLanguages = "AppleLanguages"
         static let tokenAccount = "api-token"
     }
 
@@ -79,6 +73,17 @@ final class AppSettings {
         didSet { defaults.set(notchStyle.rawValue, forKey: Key.notchStyle) }
     }
 
+    /// Interface language; nil follows macOS.
+    var language: Language? {
+        didSet {
+            guard language != oldValue else { return }
+            defaults.set(language?.rawValue, forKey: Key.language)
+            // Text drawn by macOS (context menus, system errors) reads this app-level override at launch.
+            // It is also where System Settings keeps a per-app language, so "system" clears it.
+            defaults.set(language.map { [$0.rawValue] }, forKey: Key.appleLanguages)
+        }
+    }
+
     init() {
         token = Keychain.read(account: Key.tokenAccount) ?? ""
         organization = defaults.string(forKey: Key.organization) ?? ""
@@ -90,6 +95,11 @@ final class AppSettings {
         placement = defaults.data(forKey: Key.placement)
             .flatMap { try? JSONDecoder().decode(NotchPlacement.self, from: $0) } ?? .default
         notchStyle = defaults.string(forKey: Key.notchStyle).flatMap(NotchStyle.init) ?? .solidBlack
+        language = defaults.string(forKey: Key.language).flatMap(Language.init)
+    }
+
+    var strings: any Strings {
+        (language ?? .preferred(in: Locale.preferredLanguages)).strings
     }
 
     var branches: [String] {

@@ -11,13 +11,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.mainMenu = Self.makeMainMenu()
         notifier.setUp()
         notch = NotchController(settings: settings, store: store) { [weak self] in self?.showSettings() }
         installStatusItem()
+        installMenus()
 
         store.start()
         observeChanges({ [settings] in settings.pollConfiguration }) { [weak self] in self?.store.restart() }
+        observeChanges({ [settings] in settings.language }) { [weak self] in self?.installMenus() }
 
         if !settings.isConfigured { showSettings() }
     }
@@ -31,14 +32,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func installStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "shippingbox", accessibilityDescription: "Buildkite Notch")
+        statusItem = item
+    }
+
+    /// (Re)builds every menu in the current language.
+    private func installMenus() {
+        let strings = settings.strings
+        NSApp.mainMenu = Self.makeMainMenu(strings)
 
         let menu = NSMenu()
-        menu.addItem(withTitle: "Atualizar agora", action: #selector(refresh), keyEquivalent: "r").target = self
-        menu.addItem(withTitle: "Preferências…", action: #selector(openSettings), keyEquivalent: ",").target = self
+        menu.addItem(withTitle: strings.refreshNow, action: #selector(refresh), keyEquivalent: "r").target = self
+        menu.addItem(withTitle: strings.settingsMenuItem, action: #selector(openSettings), keyEquivalent: ",").target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Sair", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        item.menu = menu
-        statusItem = item
+        menu.addItem(withTitle: strings.quit, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        statusItem?.menu = menu
     }
 
     @objc private func refresh() { store.refreshNow() }
@@ -68,24 +75,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     // MARK: - Chrome for the regular (settings open) mode
 
     /// App and Edit menus; without Edit, ⌘C/⌘V don't reach text fields.
-    private static func makeMainMenu() -> NSMenu {
+    private static func makeMainMenu(_ strings: any Strings) -> NSMenu {
         let main = NSMenu()
 
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Fechar janela", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        appMenu.addItem(withTitle: strings.closeWindow, action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Sair do Buildkite Notch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: strings.quitApp, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         main.addItem(withTitle: "Buildkite Notch", action: nil, keyEquivalent: "").submenu = appMenu
 
-        let editMenu = NSMenu(title: "Editar")
-        editMenu.addItem(withTitle: "Desfazer", action: Selector(("undo:")), keyEquivalent: "z")
-        editMenu.addItem(withTitle: "Refazer", action: Selector(("redo:")), keyEquivalent: "Z")
+        let editMenu = NSMenu(title: strings.edit)
+        editMenu.addItem(withTitle: strings.undo, action: Selector(("undo:")), keyEquivalent: "z")
+        editMenu.addItem(withTitle: strings.redo, action: Selector(("redo:")), keyEquivalent: "Z")
         editMenu.addItem(.separator())
-        editMenu.addItem(withTitle: "Recortar", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        editMenu.addItem(withTitle: "Copiar", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        editMenu.addItem(withTitle: "Colar", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        editMenu.addItem(withTitle: "Selecionar tudo", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
-        main.addItem(withTitle: "Editar", action: nil, keyEquivalent: "").submenu = editMenu
+        editMenu.addItem(withTitle: strings.cut, action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: strings.copy, action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: strings.paste, action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: strings.selectAll, action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        main.addItem(withTitle: strings.edit, action: nil, keyEquivalent: "").submenu = editMenu
 
         return main
     }

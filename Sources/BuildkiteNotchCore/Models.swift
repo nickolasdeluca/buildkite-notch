@@ -100,9 +100,10 @@ public struct Build: Codable, Sendable, Hashable, Identifiable {
 
     public var url: URL? { URL(string: webUrl) }
 
-    public var title: String {
+    /// First line of the commit message; nil when there is none.
+    public var title: String? {
         let firstLine = message?.split(separator: "\n", maxSplits: 1).first.map(String.init) ?? ""
-        return firstLine.isEmpty ? "(sem mensagem)" : firstLine
+        return firstLine.isEmpty ? nil : firstLine
     }
 
     public var jobProgress: (finished: Int, total: Int) {

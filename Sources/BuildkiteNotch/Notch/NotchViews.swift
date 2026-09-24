@@ -34,6 +34,7 @@ struct NotchRootView: View {
         .animation(.spring(duration: 0.3, bounce: 0.1), value: model.cardRect)
         .animation(.spring(duration: 0.25), value: model.collapsedRect)
         .environment(\.colorScheme, .dark)
+        .environment(\.strings, settings.strings)
     }
 
     /// The card grows out of the side facing the notch.
@@ -172,6 +173,7 @@ private struct StackItem: View {
     let item: PipelineItem
     let now: Date
     let vertical: Bool
+    @Environment(\.strings) private var strings
 
     var body: some View {
         let ring = PipelineRing(item: item, diameter: vertical ? 32 : 20, lineWidth: vertical ? 3 : 2.5)
@@ -193,9 +195,9 @@ private struct StackItem: View {
 
     private var caption: String {
         guard let build = item.build else { return "–" }
-        if build.state.isActive { return build.duration(at: now).map(formatClock) ?? "fila" }
+        if build.state.isActive { return build.duration(at: now).map(formatClock) ?? strings.queuedShort }
         guard let date = build.lastActivity else { return "–" }
-        return compactAge(now.timeIntervalSince(date))
+        return strings.compactAge(now.timeIntervalSince(date))
     }
 }
 
@@ -240,27 +242,6 @@ func initials(of name: String) -> String {
     return letters.uppercased()
 }
 
-func compactAge(_ interval: TimeInterval) -> String {
-    let seconds = max(0, Int(interval))
-    switch seconds {
-    case ..<60: return "agora"
-    case ..<3600: return "\(seconds / 60)m"
-    case ..<86_400: return "\(seconds / 3600)h"
-    default: return "\(seconds / 86_400)d"
-    }
-}
-
-/// "há 13 min" style, matching the compact captions.
-func relativeAge(_ interval: TimeInterval) -> String {
-    let seconds = max(0, Int(interval))
-    switch seconds {
-    case ..<60: return "agora"
-    case ..<3600: return "há \(seconds / 60) min"
-    case ..<86_400: return "há \(seconds / 3600) h"
-    default: return "há \(seconds / 86_400) d"
-    }
-}
-
 func formatClock(_ interval: TimeInterval) -> String {
     let seconds = max(0, Int(interval))
     if seconds >= 3600 { return String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60) }
@@ -290,6 +271,7 @@ private struct BuildCard: View {
     let settings: AppSettings
     let openSettings: () -> Void
     let now: Date
+    @Environment(\.strings) private var strings
 
     private static let maxRecent = 4
 
@@ -307,8 +289,8 @@ private struct BuildCard: View {
             if !settings.isConfigured {
                 EmptyState(
                     icon: "key.fill",
-                    message: settings.token.isEmpty ? "Conecte sua conta Buildkite" : "Escolha os pipelines para acompanhar",
-                    action: ("Abrir Preferências", openSettings)
+                    message: settings.token.isEmpty ? strings.connectAccount : strings.choosePipelines,
+                    action: (strings.openSettings, openSettings)
                 )
             } else {
                 ForEach(store.pipelineItems) { item in
@@ -344,8 +326,8 @@ private struct BuildCard: View {
             if store.isRefreshing {
                 ProgressView().controlSize(.mini)
             }
-            IconButton(systemImage: "arrow.clockwise", help: "Atualizar", action: store.refreshNow)
-            IconButton(systemImage: "gearshape", help: "Preferências", action: openSettings)
+            IconButton(systemImage: "arrow.clockwise", help: strings.refresh, action: store.refreshNow)
+            IconButton(systemImage: "gearshape", help: strings.settings, action: openSettings)
         }
     }
 }
@@ -353,6 +335,7 @@ private struct BuildCard: View {
 private struct PipelineSection: View {
     let item: PipelineItem
     let now: Date
+    @Environment(\.strings) private var strings
     @State private var hovering = false
 
     var body: some View {
@@ -378,7 +361,7 @@ private struct PipelineSection: View {
                         .foregroundStyle(.white.opacity(0.85))
                         .lineLimit(1)
                     Spacer(minLength: 6)
-                    Text(glyph.label)
+                    Text(strings.label(for: glyph))
                         .font(.system(size: 11))
                         .foregroundStyle(glyph == .idle ? Palette.secondary : glyph.color)
                 }
@@ -396,19 +379,19 @@ private struct PipelineSection: View {
     private var trailing: String {
         guard let build = item.build else { return "" }
         if build.state.isActive {
-            return "#\(build.number) · \(build.duration(at: now).map(formatClock) ?? "na fila")"
+            return "#\(build.number) · \(build.duration(at: now).map(formatClock) ?? strings.queued)"
         }
         guard let date = build.lastActivity else { return "#\(build.number)" }
-        return "#\(build.number) · \(relativeAge(now.timeIntervalSince(date)))"
+        return "#\(build.number) · \(strings.relativeAge(now.timeIntervalSince(date)))"
     }
 
     private var detail: String {
-        guard let build = item.build else { return "Sem builds recentes" }
+        guard let build = item.build else { return strings.noRecentBuilds }
         let (finished, total) = build.jobProgress
         var parts: [String] = []
-        if total > 0 { parts.append("\(finished)/\(total) jobs") }
+        if total > 0 { parts.append(strings.jobs(finished: finished, total: total)) }
         if let branch = build.branch { parts.append(branch) }
-        parts.append(build.title)
+        parts.append(build.title ?? strings.noMessage)
         return parts.joined(separator: " · ")
     }
 }
@@ -434,6 +417,7 @@ private struct ProgressBar: View {
 private struct RecentRow: View {
     let build: Build
     let now: Date
+    @Environment(\.strings) private var strings
     @State private var hovering = false
 
     var body: some View {
@@ -455,7 +439,7 @@ private struct RecentRow: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     HStack(spacing: 4) {
                         StatusGlyph(glyph: glyph, size: 9)
-                        Text(glyph.label)
+                        Text(strings.label(for: glyph))
                     }
                     .font(.system(size: 11))
                     .foregroundStyle(Palette.secondary)
@@ -471,13 +455,13 @@ private struct RecentRow: View {
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
-        .help(build.title)
+        .help(build.title ?? strings.noMessage)
     }
 
     private var age: String {
         if build.state.isActive { return build.duration(at: now).map(formatClock) ?? "" }
         guard let date = build.lastActivity else { return "" }
-        return compactAge(now.timeIntervalSince(date))
+        return strings.compactAge(now.timeIntervalSince(date))
     }
 }
 
