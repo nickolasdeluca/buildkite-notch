@@ -42,6 +42,8 @@ types are `@MainActor`.
 - Never log or persist the API token outside the Keychain.
 - Respect Buildkite rate limits: don't add per-build or per-job requests to the polling loop.
 - No new dependencies without asking the maintainer.
+- `README.md` is in English and `docs/pt-BR/README.md` is its Portuguese (Brazil) translation.
+  Change both in the same commit.
 
 ## Verifying UI changes
 

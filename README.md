@@ -1,22 +1,24 @@
 # Buildkite Notch
 
-Um notch para macOS que acompanha os builds e deploys dos seus pipelines do
-[Buildkite](https://buildkite.com), inspirado no [Codenotch](https://github.com/vinzdg/codenotch).
+**English** · [Português (Brasil)](docs/pt-BR/README.md)
 
-- **Notch recolhido:** um anel por pipeline. O arco mostra o progresso dos jobs na cor do estado
-  (amarelo rodando, vermelho falhou, roxo aguardando aprovação, verde passou), com o tempo decorrido
-  ou há quanto tempo o build terminou.
-- **Hover:** abre um card com uma seção por pipeline (barra de progresso, jobs, branch, commit) e os
-  builds recentes. Clique em qualquer item para abrir o build no Buildkite.
-- **Notificações** quando um build passa, falha, é cancelado ou fica aguardando aprovação.
-- **Posição livre:** topo, base, esquerda ou direita de qualquer tela. Nas laterais o notch fica na
-  vertical. Segure **⌥ Option** sobre o notch e arraste, ou ajuste em Preferências → Posição do notch.
-  Em Macs com notch físico, no topo e centralizado, ele se funde ao notch da câmera.
-- **Aparência:** Liquid Glass, Dark Glass ou Preto sólido.
-- **Idioma:** português (Brasil) ou inglês (EUA). Segue o idioma do macOS e pode ser trocado em
-  Preferências → Geral → Idioma.
+A macOS notch that tracks the builds and deploys of your [Buildkite](https://buildkite.com)
+pipelines, inspired by [Codenotch](https://github.com/vinzdg/codenotch).
 
-## Instalação
+- **Collapsed notch:** one ring per pipeline. The arc shows job progress in the state's color
+  (yellow running, red failed, purple waiting for approval, green passed), with the elapsed time or
+  how long ago the build finished.
+- **Hover:** opens a card with a section per pipeline (progress bar, jobs, branch, commit) and the
+  recent builds. Click any item to open the build on Buildkite.
+- **Notifications** when a build passes, fails, is canceled or is waiting for approval.
+- **Free placement:** top, bottom, left or right edge of any display. On the sides the notch turns
+  vertical. Hold **⌥ Option** over the notch and drag it, or adjust it in Settings → Notch Position.
+  On Macs with a hardware notch, placed at the top and centered, it merges with the camera housing.
+- **Appearance:** Liquid Glass, Dark Glass or Solid Black.
+- **Language:** English (US) or Portuguese (Brazil). Follows the macOS language and can be changed
+  in Settings → General → Language.
+
+## Installation
 
 ### Homebrew
 
@@ -26,78 +28,81 @@ brew install --cask nickolasdeluca/tap/buildkite-notch
 
 ### Manual
 
-Baixe o `BuildkiteNotch-<versão>.zip` da [última release](https://github.com/nickolasdeluca/buildkite-notch/releases/latest),
-descompacte e mova `BuildkiteNotch.app` para `/Applications`. O app é assinado e notarizado pela Apple.
+Download `BuildkiteNotch-<version>.zip` from the [latest release](https://github.com/nickolasdeluca/buildkite-notch/releases/latest),
+unzip it and move `BuildkiteNotch.app` to `/Applications`. The app is signed and notarized by Apple.
 
-Requer macOS 14 (Sonoma) ou posterior, Apple Silicon ou Intel.
+Requires macOS 14 (Sonoma) or later, Apple Silicon or Intel.
 
-## Configuração
+## Setup
 
-Na primeira execução a janela de Preferências abre sozinha (depois, use o ícone na barra de menu).
+On first launch the Settings window opens by itself (later, use the menu bar icon).
 
-1. Crie um token em <https://buildkite.com/user/api-access-tokens> com os escopos
-   `read_builds`, `read_pipelines` e `read_organizations`.
-2. Cole o token e clique em **Conectar**.
-3. Escolha a organização e marque os pipelines que quer acompanhar.
-4. Opcional: filtre por branches (ex.: `main, production`).
+1. Create a token at <https://buildkite.com/user/api-access-tokens> with the scopes
+   `read_builds`, `read_pipelines` and `read_organizations`.
+2. Paste the token and click **Connect**.
+3. Pick the organization and check the pipelines you want to follow.
+4. Optional: filter by branches (e.g. `main, production`).
 
-O token fica no Keychain do macOS. Nada sai da sua máquina além das chamadas à API do Buildkite.
-O app consulta a API a cada 10 s enquanto há builds rodando, a cada 30 s parado e espera 60 s se
-atingir o limite de requisições.
+The token is stored in the macOS Keychain. Nothing leaves your machine besides the calls to the
+Buildkite API. The app polls every 10 s while builds are running, every 30 s when idle, and waits
+60 s when it hits the rate limit.
 
-## Desenvolvimento
+## Development
 
-Requer Xcode 16+ (Swift 6). Não há projeto Xcode: o app é um pacote SwiftPM e o `Makefile` monta o `.app`.
+Requires Xcode 16+ (Swift 6). There is no Xcode project: the app is a SwiftPM package and the
+`Makefile` assembles the `.app`.
 
 ```sh
-make run      # build debug, monta build/BuildkiteNotch.app e abre
-make test     # testes do módulo core
-make release  # build release universal (arm64 + x86_64), assinatura ad-hoc
-make install  # release + copia para /Applications
-make icon     # regera Resources/AppIcon.icns a partir de Scripts/make-icon.swift
+make run      # debug build, assembles build/BuildkiteNotch.app and opens it
+make test     # core module tests
+make release  # universal release build (arm64 + x86_64), ad-hoc signed
+make install  # release + copy to /Applications
+make icon     # regenerates Resources/AppIcon.icns from Scripts/make-icon.swift
 ```
 
-Builds locais usam assinatura ad-hoc, então o macOS pode pedir acesso ao Keychain após cada rebuild.
+Local builds are ad-hoc signed, so macOS may ask for Keychain access after each rebuild.
 
-### Estrutura
+### Layout
 
 ```
-Sources/BuildkiteNotchCore/   API REST v2, modelos, regras de notificação e geometria do notch (sem UI, testável)
-Sources/BuildkiteNotch/       App AppKit + SwiftUI
-  Localization/               Textos da interface, um arquivo por idioma
-  Notch/                      Janela do notch, notch recolhido, card, estilos
-  Services/                   Preferências, Keychain, polling (BuildStore), notificações
-  Settings/                   Janela de Preferências
+Sources/BuildkiteNotchCore/   REST API v2, models, notification rules and notch geometry (no UI, testable)
+Sources/BuildkiteNotch/       AppKit + SwiftUI app
+  Localization/               Interface strings, one file per language
+  Notch/                      Notch window, collapsed notch, card, styles
+  Services/                   Settings, Keychain, polling (BuildStore), notifications
+  Settings/                   Settings window
 Tests/BuildkiteNotchCoreTests/
-Resources/                    Info.plist e AppIcon.icns
+Resources/                    Info.plist and AppIcon.icns
 Scripts/                      make-icon.swift, release.sh
+docs/pt-BR/                   Portuguese (Brazil) translation of this README
 ```
 
-## Distribuição
+## Distribution
 
-As releases são assinadas com **Developer ID**, notarizadas e publicadas no GitHub. O cask do
-Homebrew fica em [`nickolasdeluca/homebrew-tap`](https://github.com/nickolasdeluca/homebrew-tap).
+Releases are signed with **Developer ID**, notarized and published on GitHub. The Homebrew cask
+lives in [`nickolasdeluca/homebrew-tap`](https://github.com/nickolasdeluca/homebrew-tap).
 
-Preparação (uma vez por máquina):
+One-time setup per machine:
 
-1. **Certificado Developer ID Application:** Xcode → Settings → Accounts → sua equipe →
-   Manage Certificates → **+** → *Developer ID Application*. Só o Account Holder da conta pode criá-lo.
-2. **Credenciais de notarização:** copie `Scripts/release.env.example` para `Scripts/release.env`
-   (fora do git) e preencha **uma** das opções:
-   - `NOTARY_PROFILE`: um perfil salvo com `xcrun notarytool store-credentials`. Perfis valem por
-     time, então um criado para outro projeto serve aqui.
-   - `APPLE_API_KEY_PATH`, `APPLE_API_KEY_ID` e `APPLE_API_ISSUER_ID`: chave de API do App Store
-     Connect (Users and Access → Integrations → Keys).
-3. **Tap do Homebrew:** um repositório público `nickolasdeluca/homebrew-tap` (pode começar vazio).
+1. **Developer ID Application certificate:** Xcode → Settings → Accounts → your team →
+   Manage Certificates → **+** → *Developer ID Application*. Only the account's Account Holder can
+   create it.
+2. **Notarization credentials:** copy `Scripts/release.env.example` to `Scripts/release.env`
+   (ignored by git) and fill in **one** of the options:
+   - `NOTARY_PROFILE`: a profile saved with `xcrun notarytool store-credentials`. Profiles are per
+     team, so one created for another project works here.
+   - `APPLE_API_KEY_PATH`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER_ID`: an App Store Connect API
+     key (Users and Access → Integrations → Keys).
+3. **Homebrew tap:** a public `nickolasdeluca/homebrew-tap` repository (it can start empty).
 
-Para publicar uma versão:
+To publish a version:
 
 ```sh
-make bump VERSION=0.2.0   # atualiza Info.plist
-# atualize o CHANGELOG.md e faça o commit
-make dist                 # só gera build/BuildkiteNotch-0.2.0.zip assinado e notarizado
-make publish              # dist + tag + GitHub Release + atualização do cask
+make bump VERSION=0.2.0   # updates Info.plist
+# update CHANGELOG.md and commit
+make dist                 # only builds a signed, notarized build/BuildkiteNotch-0.2.0.zip
+make publish              # dist + tag + GitHub Release + cask update
 ```
 
-Todas as variáveis estão documentadas em `Scripts/release.env.example`. Variáveis exportadas no
-shell têm prioridade sobre o arquivo.
+Every variable is documented in `Scripts/release.env.example`. Variables exported in the shell take
+precedence over the file.

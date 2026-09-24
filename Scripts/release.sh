@@ -43,7 +43,7 @@ if [[ -z "$SIGN_IDENTITY" ]]; then
     SIGN_IDENTITY="$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -1)"
 fi
 if [[ -z "$SIGN_IDENTITY" ]]; then
-    echo "error: no \"Developer ID Application\" certificate found. See README (Distribuição)." >&2
+    echo "error: no \"Developer ID Application\" certificate found. See README (Distribution)." >&2
     exit 1
 fi
 
