@@ -5,6 +5,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versio
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-25
+
 ### Added
 
 - Configurable polling intervals in Settings → Refresh Interval, one while builds run (default
