@@ -31,6 +31,7 @@ struct SettingsView: View {
             pipelinesSection
             placementSection
             appearanceSection
+            updatesSection
             generalSection
         }
         .formStyle(.grouped)
@@ -202,6 +203,36 @@ struct SettingsView: View {
                 ForEach(NotchStyle.allCases) { Text(strings.name(for: $0)).tag($0) }
             }
             .pickerStyle(.segmented)
+        }
+    }
+
+    // MARK: - Updates
+
+    private var updatesSection: some View {
+        Section {
+            intervalRow(strings.whileBuildsRun, seconds: $settings.activePollInterval)
+            intervalRow(strings.whenIdle, seconds: $settings.idlePollInterval)
+        } header: {
+            Text(strings.refreshInterval)
+        } footer: {
+            Text(strings.pollIntervalHelp(range: PollInterval.range))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func intervalRow(_ title: String, seconds: Binding<Int>) -> some View {
+        let clamped = Binding { seconds.wrappedValue } set: { seconds.wrappedValue = PollInterval.clamped($0) }
+        return LabeledContent(title) {
+            HStack(spacing: 4) {
+                TextField(title, value: clamped, format: .number.grouping(.never))
+                    .labelsHidden()
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 56)
+                Text(strings.secondsUnit)
+                Stepper(title, value: clamped, in: PollInterval.range, step: 5)
+                    .labelsHidden()
+            }
         }
     }
 

@@ -144,3 +144,13 @@ private let screen = CGRect(x: 0, y: 0, width: 1000, height: 600)
     #expect(Language.preferred(in: ["fr-FR", "de"]) == .english)
     #expect(Language.preferred(in: []) == .english)
 }
+
+@Test func pollIntervalClampsAndBacksOff() {
+    #expect(PollInterval.clamped(1) == 10)
+    #expect(PollInterval.clamped(100_000) == 3600)
+    #expect(PollInterval.delay(active: 15, idle: 90, anyActive: true, rateLimited: false) == 15)
+    #expect(PollInterval.delay(active: 15, idle: 90, anyActive: false, rateLimited: false) == 90)
+    #expect(PollInterval.delay(active: 1, idle: 90, anyActive: true, rateLimited: false) == 10)
+    #expect(PollInterval.delay(active: 15, idle: 90, anyActive: true, rateLimited: true) == 60)
+    #expect(PollInterval.delay(active: 15, idle: 300, anyActive: false, rateLimited: true) == 300)
+}

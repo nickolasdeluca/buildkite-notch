@@ -28,10 +28,6 @@ final class BuildStore {
     @ObservationIgnored private let notifier: Notifier
     @ObservationIgnored private var pollTask: Task<Void, Never>?
 
-    private static let activeInterval: Duration = .seconds(10)
-    private static let idleInterval: Duration = .seconds(30)
-    private static let backoffInterval: Duration = .seconds(60)
-
     init(settings: AppSettings, notifier: Notifier) {
         self.settings = settings
         self.notifier = notifier
@@ -96,7 +92,7 @@ final class BuildStore {
         guard settings.isConfigured else {
             buildsByPipeline = [:]
             failures = []
-            return Self.idleInterval
+            return nextDelay(anyActive: false, rateLimited: false)
         }
 
         let config = settings.pollConfiguration
@@ -124,7 +120,9 @@ final class BuildStore {
         }
 
         // Settings changed while we were waiting; drop this round.
-        guard !Task.isCancelled, settings.pollConfiguration == config else { return Self.activeInterval }
+        guard !Task.isCancelled, settings.pollConfiguration == config else {
+            return nextDelay(anyActive: true, rateLimited: false)
+        }
 
         var failed: [PollFailure] = []
         var rateLimited = false
@@ -148,8 +146,16 @@ final class BuildStore {
         failures = failed
         lastUpdated = .now
 
-        if rateLimited { return Self.backoffInterval }
         let anyActive = buildsByPipeline.values.contains { $0.contains(where: \.state.isActive) }
-        return anyActive ? Self.activeInterval : Self.idleInterval
+        return nextDelay(anyActive: anyActive, rateLimited: rateLimited)
+    }
+
+    private func nextDelay(anyActive: Bool, rateLimited: Bool) -> Duration {
+        .seconds(PollInterval.delay(
+            active: settings.activePollInterval,
+            idle: settings.idlePollInterval,
+            anyActive: anyActive,
+            rateLimited: rateLimited
+        ))
     }
 }

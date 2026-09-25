@@ -63,6 +63,12 @@ protocol Strings: Sendable {
     var appearance: String { get }
     var notchStyle: String { get }
     func name(for style: NotchStyle) -> String
+    var refreshInterval: String { get }
+    var whileBuildsRun: String { get }
+    var whenIdle: String { get }
+    /// Unit after the interval field, e.g. "s".
+    var secondsUnit: String { get }
+    func pollIntervalHelp(range: ClosedRange<Int>) -> String
     var general: String { get }
     var language: String { get }
     var systemLanguage: String { get }

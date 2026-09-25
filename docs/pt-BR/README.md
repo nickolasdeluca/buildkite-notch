@@ -44,8 +44,9 @@ Na primeira execução a janela de Preferências abre sozinha (depois, use o íc
 4. Opcional: filtre por branches (ex.: `main, production`).
 
 O token fica no Keychain do macOS. Nada sai da sua máquina além das chamadas à API do Buildkite.
-O app consulta a API a cada 10 s enquanto há builds rodando, a cada 30 s parado e espera 60 s se
-atingir o limite de requisições.
+O app consulta a API a cada 10 s enquanto há builds rodando e a cada 60 s parado; os dois
+intervalos podem ser ajustados em Preferências → Intervalo de atualização (10–3600 s). Ao atingir o
+limite de requisições, espera pelo menos 60 s.
 
 ## Desenvolvimento
 

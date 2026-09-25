@@ -34,6 +34,8 @@ final class AppSettings {
         static let placement = "placement"
         static let notchStyle = "notchStyle"
         static let language = "language"
+        static let activePollInterval = "activePollInterval"
+        static let idlePollInterval = "idlePollInterval"
         static let appleLanguages = "AppleLanguages"
         static let tokenAccount = "api-token"
     }
@@ -73,6 +75,16 @@ final class AppSettings {
         didSet { defaults.set(notchStyle.rawValue, forKey: Key.notchStyle) }
     }
 
+    /// Seconds between polls while builds run, within `PollInterval.range`.
+    var activePollInterval: Int {
+        didSet { defaults.set(activePollInterval, forKey: Key.activePollInterval) }
+    }
+
+    /// Seconds between polls when nothing runs, within `PollInterval.range`.
+    var idlePollInterval: Int {
+        didSet { defaults.set(idlePollInterval, forKey: Key.idlePollInterval) }
+    }
+
     /// Interface language; nil follows macOS.
     var language: Language? {
         didSet {
@@ -96,6 +108,12 @@ final class AppSettings {
             .flatMap { try? JSONDecoder().decode(NotchPlacement.self, from: $0) } ?? .default
         notchStyle = defaults.string(forKey: Key.notchStyle).flatMap(NotchStyle.init) ?? .solidBlack
         language = defaults.string(forKey: Key.language).flatMap(Language.init)
+        activePollInterval = PollInterval.clamped(
+            defaults.object(forKey: Key.activePollInterval) as? Int ?? PollInterval.defaultActiveSeconds
+        )
+        idlePollInterval = PollInterval.clamped(
+            defaults.object(forKey: Key.idlePollInterval) as? Int ?? PollInterval.defaultIdleSeconds
+        )
     }
 
     var strings: any Strings {

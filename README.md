@@ -44,8 +44,9 @@ On first launch the Settings window opens by itself (later, use the menu bar ico
 4. Optional: filter by branches (e.g. `main, production`).
 
 The token is stored in the macOS Keychain. Nothing leaves your machine besides the calls to the
-Buildkite API. The app polls every 10 s while builds are running, every 30 s when idle, and waits
-60 s when it hits the rate limit.
+Buildkite API. The app polls every 10 s while builds are running and every 60 s when idle; both
+intervals can be changed in Settings → Refresh Interval (10–3600 s). It waits at least 60 s after
+hitting the rate limit.
 
 ## Development
 

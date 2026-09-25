@@ -106,6 +106,15 @@ struct PortugueseStrings: Strings {
         }
     }
 
+    let refreshInterval = "Intervalo de atualização"
+    let whileBuildsRun = "Com builds rodando"
+    let whenIdle = "Sem builds rodando"
+    let secondsUnit = "s"
+
+    func pollIntervalHelp(range: ClosedRange<Int>) -> String {
+        "Entre \(range.lowerBound) e \(range.upperBound) segundos. Intervalos curtos com muitos pipelines consomem mais do limite de requisições da API do Buildkite."
+    }
+
     let general = "Geral"
     let language = "Idioma"
     let systemLanguage = "Padrão do sistema"

@@ -18,6 +18,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         store.start()
         observeChanges({ [settings] in settings.pollConfiguration }) { [weak self] in self?.store.restart() }
+        // Keep the builds we have; only reschedule so a shorter interval applies right away.
+        observeChanges({ [settings] in (settings.activePollInterval, settings.idlePollInterval) }) { [weak self] in
+            self?.store.start(debounce: .seconds(1))
+        }
         observeChanges({ [settings] in settings.language }) { [weak self] in self?.installMenus() }
 
         if !settings.isConfigured { showSettings() }

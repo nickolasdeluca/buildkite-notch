@@ -5,6 +5,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versio
 
 ## [Unreleased]
 
+### Added
+
+- Configurable polling intervals in Settings → Refresh Interval, one while builds run (default
+  10 s) and one when idle (default 60 s), each from 10 to 3600 s.
+
+### Changed
+
+- The idle polling interval defaults to 60 s instead of 30 s.
+
 ## [0.2.0] - 2026-09-24
 
 ### Added
